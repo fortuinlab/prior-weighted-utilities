@@ -1,0 +1,29 @@
+[project]
+name = "uq-utility"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "costcla>=0.6",
+    "entsoe-py>=0.7.4",
+    "flake8-pyproject>=1.2.3",
+    "gpytorch>=1.14",
+    "matplotlib>=3.10.6",
+    "ngboost>=0.5.6",
+    "numpy>=2.3.2",
+    "pandas>=2.3.2",
+    "pyarrow>=22.0.0",
+    "scikit-learn>=1.6.1",
+    "seaborn>=0.13.2",
+    "tabpfn>=2.0.3",
+    "torch>=2.8.0",
+    "ucimlrepo>=0.0.7",
+    "wandb>=0.22.0",
+    "xgboost>=3.0.5",
+]
+[tool.flake8]
+exclude = [".git", "__pycache__"]
+max-line-length = 160
+per-file-ignores = ["__init__.py:F401"]
+extend-ignore = ["E203"]

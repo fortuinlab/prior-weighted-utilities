@@ -1,0 +1,10 @@
+.vscode/
+.venv/
+**/__pycache__
+.DS_Store
+entsoe_key.txt
+data/
+models/
+predictions/
+results/
+figures/
