@@ -149,7 +149,7 @@ def main(task: str):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--task", type=str, default="regression",
+        "--task", type=str, default="binary_classification",
         help="Can be 'binary_classification' and 'regression'."
     )
 

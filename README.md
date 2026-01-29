@@ -33,6 +33,8 @@ For the evaluation for one dataset, run `03_evaluate_models.py` with the respect
 This can be orchestrated with `03_evaluate_models.sh`.
 The results will be stored in the new folder `results`.
 
+Running the sensitivity analysis for prior misspecification works just as regular evaluation, but using the Python script `04_sensitivity_analysis.py` (and the corresponding `.sh` file for orchestration).
+
 ### 🌳 Applied Case Studies
 
 #### ⚡️ Electricity Market Bidding
@@ -90,4 +92,4 @@ The results will be stored in `results`.
 All scripts to create figures can be found in the folder `visualization`.
 `case_study_figures.py` and `priors.py` can simply be executed and the resulting figure will be stored in a new folder `figures`.
 The result boxplots can be created with the script `boxplots.py`, specifying the boxplot one wants to create: `benchmark`, `electricity`, or `credit_and_p2p`.
-
+The sensitivity analysis results can be visualized with the script `sensitivity_analysis`, specifying the task (`binary_classification` or `regression`).
