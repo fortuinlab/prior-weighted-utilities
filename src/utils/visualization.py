@@ -67,10 +67,57 @@ def make_boxplot_on_ax(
     ax.axhline(y=0, linestyle="--", color="black", linewidth=0.8, alpha=0.6)
 
 
-def _as_list(x):
-    if isinstance(x, (list, tuple)):
-        return list(x)
-    return [x]
+def make_grouped_boxplot_on_ax(
+    ax: plt.Axes,
+    dfs: list[pd.DataFrame],
+    group_labels: list[str],
+    metrics: list[str],
+    metric_labels: list[str],
+    colors: list[str],
+    title: str,
+    ylim: list[float] | None = None,
+):
+    assert len(dfs) == len(colors) == len(group_labels)
+
+    x = np.arange(len(metrics)) + 1  # centers for each metric group
+
+    n_groups = len(dfs)
+    group_width = 0.8                 # total width occupied per metric (all boxes)
+    box_width = group_width / n_groups
+    offsets = (np.arange(n_groups) - (n_groups - 1) / 2.0) * box_width
+
+    # draw one boxplot call per df (gives you independent coloring & control)
+    for j, (dfj, color, glab) in enumerate(zip(dfs, colors, group_labels)):
+        data_j = [dfj[dfj["metric"] == m]["kendall_tau"].values for m in metrics]
+        pos_j = x + offsets[j]
+
+        bp = ax.boxplot(
+            data_j,
+            positions=pos_j,
+            widths=box_width * 0.9,
+            patch_artist=True,
+            showfliers=False,
+            whis=(5, 95),
+            medianprops=dict(color="black", linewidth=2),
+        )
+
+        for patch in bp["boxes"]:
+            patch.set_facecolor(color)
+            patch.set_alpha(0.85)
+
+    # axes cosmetics
+    ax.set_title(title)
+    ax.set_xticks(x)
+    ax.set_xticklabels(metric_labels, rotation=30)
+
+    if ylim is not None:
+        ax.set_ylim(ylim[0], ylim[1])
+
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    ax.tick_params(direction="out", length=3, width=0.8)
+    ax.grid(True, which="major", axis="both", linestyle=":", linewidth=0.6, alpha=0.5)
+    ax.axhline(y=0, linestyle="--", color="black", linewidth=0.8, alpha=0.6)
 
 
 def load_corr_by_repeat(results_root: Path):
@@ -87,25 +134,16 @@ def load_corr_by_repeat(results_root: Path):
         df = pd.read_csv(fp)
         df["dataset"] = d
         dfs.append(df)
-    return pd.concat(dfs, ignore_index=True), datasets
-
-
-def dataset_filename(datasets) -> str:
-    datasets = _as_list(datasets)
-    return "_".join(str(d) for d in datasets)
+    return pd.concat(dfs, ignore_index=True)
 
 
 def prep_panel_df(df: pd.DataFrame, fam_prefix: str) -> pd.DataFrame:
     """
-    1) select utilities in family
-    2) average over utilities within family per (dataset, repeat, metric)
-    3) optionally aggregate across datasets:
-        - pool: keep (dataset, repeat, metric)
-        - mean_per_repeat: average over datasets per (repeat, metric)
+    1) Select utilities belonging to a given family (by prefix).
+    2) Average Kendall's tau over utilities within the family,
+    for each (dataset, repeat, metric) combination.
     """
     df_plot = df[df["utility"].str.startswith(fam_prefix)].copy()
-
-    # family average (u_c over sampled c's etc.)
     df_plot = df_plot.groupby(["dataset", "repeat", "metric"], as_index=False)["kendall_tau"].mean()
 
     return df_plot

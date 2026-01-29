@@ -15,7 +15,6 @@ from src.utils import (   # noqa: E402
     set_paper_style_icmlish,
     make_boxplot_on_ax,
     load_corr_by_repeat,
-    dataset_filename,
     prep_panel_df,
 )
 
@@ -98,8 +97,8 @@ def plot_alignment(
             Patch(facecolor=PLAUSIBLE, label="plausible prior (ours)"),
         ]
         # ---------- load data ----------
-        df_bc, datasets_bc = load_corr_by_repeat(results_root_bc)
-        df_reg, datasets_reg = load_corr_by_repeat(results_root_reg)
+        df_bc = load_corr_by_repeat(results_root_bc)
+        df_reg = load_corr_by_repeat(results_root_reg)
 
         # ---------- figure layout ----------
         # 2 rows x 2 cols = 4 plots
@@ -167,9 +166,6 @@ def plot_alignment(
             va="center",
             rotation="vertical",
         )
-        bc_name = dataset_filename(datasets_bc)
-        reg_name = dataset_filename(datasets_reg)
-        fname = f"{bc_name}_{reg_name}.pdf"
 
     if experiment == "electricity":
         figsize = (4.0, 2.3)
@@ -207,7 +203,6 @@ def plot_alignment(
             frameon=False,
             bbox_to_anchor=(0.56, -0.05),
         )
-        fname = "electricity.pdf"
 
     if experiment == "credit_and_p2p":
         figsize = (6.8, 2.3)
@@ -229,7 +224,7 @@ def plot_alignment(
             Patch(facecolor=NOTALIGNED, label="conventional metrics"),
             Patch(facecolor=PLAUSIBLE, label="PWUs (ours)"),
         ]
-        df_credit, _ = load_corr_by_repeat(results_root_credit)
+        df_credit = load_corr_by_repeat(results_root_credit)
         df_credit = df_credit.groupby(["dataset", "repeat", "metric"], as_index=False)["kendall_tau"].mean()
         file_p2p = results_root_p2p / "kendall_by_repeat.csv"
         df_p2p = pd.read_csv(file_p2p)
@@ -264,10 +259,9 @@ def plot_alignment(
             frameon=False,
             bbox_to_anchor=(0.5, -0.05),
         )
-        fname = "credit_and_p2p.pdf"
 
     fig.tight_layout(w_pad=1.2, h_pad=0.8)
-    fig.savefig(fig_dir / fname, bbox_inches="tight")
+    fig.savefig(fig_dir / f"{experiment}.pdf", bbox_inches="tight")
     plt.close(fig)
 
     return fig

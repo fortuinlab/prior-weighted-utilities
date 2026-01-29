@@ -6,5 +6,5 @@ entsoe_key.txt
 data/
 models/
 predictions/
-results/
+results**/
 figures/
