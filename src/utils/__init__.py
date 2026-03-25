@@ -1,5 +1,5 @@
 from .credit_quantities import compute_average_credit_quantities
-from .metric_correlation import compute_metric_correlation
+from .metric_correlation import compute_metric_correlation, top1_agreement, topk_agreement
 from .visualization import (
     load_corr_by_repeat,
     make_boxplot_on_ax,

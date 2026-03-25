@@ -1,4 +1,5 @@
 from typing import Sequence
+from typing import List
 
 import numpy as np
 
@@ -50,3 +51,15 @@ def compute_metric_correlation(
     tau = (concordant - discordant) / total_pairs  # = 1 - 2*inv/total_pairs
 
     return float(tau)
+
+
+def top1_agreement(ranking_m: List[str], ranking_u: List[str]) -> int:
+    """1 if both rankings agree on the best model, 0 otherwise."""
+    return int(ranking_m[0] == ranking_u[0])
+
+
+def topk_agreement(ranking_m: List[str], ranking_u: List[str], k: int) -> float:
+    """Jaccard similarity of the top-k sets from two rankings."""
+    set_m = set(ranking_m[:k])
+    set_u = set(ranking_u[:k])
+    return len(set_m & set_u) / len(set_m | set_u)
