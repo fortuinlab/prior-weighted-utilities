@@ -5,7 +5,7 @@ from typing import Dict, Optional
 
 import numpy as np
 import pandas as pd
-from scipy.stats import beta
+from scipy.stats import beta, pearsonr
 
 root_dir = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(root_dir))
@@ -24,7 +24,7 @@ from src.metrics.utility import (   # noqa: E402
     topk_utility_regression,
     topk_utility_regression_pwu
 )
-from src.utils import compute_metric_correlation  # noqa: E402
+from src.utils import compute_metric_correlation, top1_agreement, topk_agreement  # noqa: E402
 
 
 def _compute_metrics_for_one_model(
@@ -309,8 +309,10 @@ def main(dataset: Optional[str] = "air"):
                 tau = compute_metric_correlation(
                     ranking_m=rank_dict[m], ranking_u=rank_dict[u]
                 )
+                t1 = top1_agreement(ranking_m=rank_dict[m], ranking_u=rank_dict[u])
+                t3 = topk_agreement(ranking_m=rank_dict[m], ranking_u=rank_dict[u], k=3)
                 tau_rows.append(
-                    {"repeat": r, "utility": u, "metric": m, "kendall_tau": tau}
+                    {"repeat": r, "utility": u, "metric": m, "kendall_tau": tau, "top1": t1, "top3": t3}
                 )
 
     ranking_df = pd.DataFrame(ranking_rows)
@@ -329,8 +331,37 @@ def main(dataset: Optional[str] = "air"):
         ).reset_index()
         return out
 
-    tau_summary = summarize_alignment(tau_df, "kendall_tau")
-    tau_summary.to_csv(RESULT_PATH / "kendall_summary_over_repeats.csv", index=False)
+    for value_col in ["kendall_tau", "top1", "top3"]:
+        summary = summarize_alignment(tau_df, value_col)
+        summary.to_csv(RESULT_PATH / f"{value_col}_summary_over_repeats.csv", index=False)
+
+    # ---- Pearson on raw metric/utility values ----
+    pearson_rows = []
+
+    clean_to_orig = {clean_metric_name(m): m for m in smaller_is_better.keys()}
+
+    for r in repeats:
+        sub = metric_values_by_repeat[metric_values_by_repeat["repeat"] == r]
+
+        for m in base_metrics:
+            sign = -1.0 if smaller_is_better[clean_to_orig[m]] else 1.0
+            m_values = sign * sub[clean_to_orig[m]].to_numpy()
+            for u in utilities:
+                u_values = sub[clean_to_orig[u]].to_numpy()
+                corr, pval = pearsonr(m_values, u_values)
+                pearson_rows.append({
+                    "repeat": r,
+                    "utility": u,
+                    "metric": m,
+                    "pearson_r": corr,
+                    "pearson_pval": pval,
+                })
+
+    pearson_df = pd.DataFrame(pearson_rows)
+    pearson_df.to_csv(RESULT_PATH / "pearson_by_repeat.csv", index=False)
+
+    pearson_summary = summarize_alignment(pearson_df, "pearson_r")
+    pearson_summary.to_csv(RESULT_PATH / "pearson_summary_over_repeats.csv", index=False)
 
 
 if __name__ == "__main__":
