@@ -19,6 +19,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from torch.utils.data import DataLoader, TensorDataset
 from tqdm import tqdm
+from tabpfn import TabPFNRegressor
 
 root_dir = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(root_dir))
@@ -282,10 +283,49 @@ def het_mlp(X_tr, y_tr, X_te, seed, device: torch.device):
     return mu_s, sigma_s, loss_evo
 
 
+def tab_pfn_reg(X_tr, y_tr, X_te, seed):
+    # TabPFN wants no preprocessing, but we need to handle pd.NA
+    def normalize_df(df: pd.DataFrame) -> pd.DataFrame:
+        out = {}
+        for c in df.columns:
+            col = df[c].tolist()
+            first = next((v for v in col if v is not None and v is not pd.NA), None)
+            if isinstance(first, (int, float, np.number)):
+                out[c] = [float(v) if v is not None and v is not pd.NA else np.nan for v in col]
+            else:
+                out[c] = ["__nan__" if v is None or v is pd.NA else str(v) for v in col]
+        return pd.DataFrame(out)
+
+    X_tr = normalize_df(X_tr)
+    X_te = normalize_df(X_te)
+    y_tr_clean = np.asarray([float(v) for v in y_tr.tolist()], dtype=np.float64)
+
+    # Subsample if too large
+    if len(X_tr) > 10_000:
+        rs = np.random.RandomState(seed)
+        idx = rs.choice(len(X_tr), 10_000, replace=False)
+        X_tr = X_tr.iloc[idx]
+        y_tr_clean = y_tr_clean[idx]
+
+    reg = TabPFNRegressor(device="cpu")
+    reg.fit(X_tr, y_tr_clean)
+
+    # Mean prediction
+    y_pred = reg.predict(X_te, output_type="mean")
+
+    # Std from quantiles: q84.13 - q15.87 ≈ 2σ for a normal
+    quantiles = reg.predict(X_te, output_type="quantiles", quantiles=[0.1587, 0.8413])
+    y_std = (quantiles[1] - quantiles[0]) / 2.0
+    y_std = np.clip(y_std, 1e-12, None)  # ensure positive
+
+    return y_pred, y_std
+
+
 def main(
     dataset: Optional[str] = None,
     repeat: Optional[int] = None,
     fold: Optional[int] = None,
+    only_tabpfn: bool = False,
 ):
     # Deterministic default model-seed per run
     seed = 10 * repeat + fold
@@ -330,6 +370,34 @@ def main(
         + f"/experiments/benchmark_datasets/regression/predictions/{dataset}/repeat_{repeat:04d}/fold_{fold:02d}"
     )
     out_path.mkdir(parents=True, exist_ok=True)
+
+    if only_tabpfn:
+        mu_fp = out_path / "predictions_mu.csv"
+        std_fp = out_path / "predictions_std.csv"
+        if not mu_fp.exists() or not std_fp.exists():
+            raise FileNotFoundError(f"Cannot append TabPFN — missing {mu_fp} or {std_fp}")
+
+        df_mu = pd.read_csv(mu_fp)
+        df_std = pd.read_csv(std_fp)
+
+        if "TabPFN" in df_mu.columns:
+            print(f"TabPFN already present in {mu_fp}, skipping.")
+            return
+
+        if len(df_mu) != len(X_te_df):
+            raise ValueError(
+                f"Existing predictions have {len(df_mu)} rows but current "
+                f"test split has {len(X_te_df)} rows."
+            )
+
+        print(f"[{dataset}] repeat={repeat} fold={fold} — fitting TabPFN only...")
+        y_pred_tabpfn, y_std_tabpfn = tab_pfn_reg(X_tr_df, y_tr_df, X_te_df, seed)
+        df_mu["TabPFN"] = np.squeeze(y_pred_tabpfn)
+        df_std["TabPFN"] = np.squeeze(y_std_tabpfn)
+        df_mu.to_csv(mu_fp, index=False)
+        df_std.to_csv(std_fp, index=False)
+        print("Done — TabPFN column appended.")
+        return
 
     # ------ train + predict ------
     print(f"[{dataset}] repeat={repeat} fold={fold} seed={seed}")
@@ -385,6 +453,10 @@ def main(
     plt.savefig(str(out_path) + "/MLP-training.png")
     plt.close()
 
+    # TabPFN
+    print("Fitting TabPFN...")
+    y_pred_tabpfn, y_std_tabpfn = tab_pfn_reg(X_tr_df, y_tr_df, X_te_df, seed)
+
     # Save predictions + y_true + indices
     df_y_pred = pd.DataFrame(
         {
@@ -398,6 +470,7 @@ def main(
             "NGB": np.squeeze(y_pred_ngb),
             "GP": np.squeeze(y_pred_gp),
             "MLP": np.squeeze(y_pred_mlp),
+            "TabPFN": np.squeeze(y_pred_tabpfn),
         }
     )
     df_y_pred.to_csv(out_path / "predictions_mu.csv", index=False)
@@ -414,6 +487,7 @@ def main(
             "NGB": y_std_ngb,
             "GP": y_std_gp,
             "MLP": y_std_mlp,
+            "TabPFN": np.squeeze(y_std_tabpfn),
         }
     )
     df_y_std.to_csv(out_path / "predictions_std.csv", index=False)
@@ -424,6 +498,7 @@ if __name__ == "__main__":
     parser.add_argument("--dataset", type=str, default="air")
     parser.add_argument("--repeat", type=int, default=0)
     parser.add_argument("--fold", type=int, default=1)
+    parser.add_argument("--only-tabpfn", type=bool, default=False)
 
     args = parser.parse_args()
     main(**vars(args))

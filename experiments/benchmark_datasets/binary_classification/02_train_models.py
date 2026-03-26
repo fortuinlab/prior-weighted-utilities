@@ -397,7 +397,7 @@ if __name__ == "__main__":
     parser.add_argument("--dataset", type=str, default="heartdisease")
     parser.add_argument("--repeat", type=int, default=0)
     parser.add_argument("--fold", type=int, default=1)
-    parser.add_argument("--only-tabpfn", type=bool, default=True)
+    parser.add_argument("--only-tabpfn", type=bool, default=False)
 
     args = parser.parse_args()
     main(**vars(args))
