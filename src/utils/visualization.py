@@ -35,9 +35,10 @@ def make_boxplot_on_ax(
     colors: list[str],
     title: str,
     ylim: list[float] = None,
+    value_col: str = "kendall_tau",
 ):
     x = np.arange(len(metrics)) + 1
-    data = [df[df["metric"] == m]["kendall_tau"].values for m in metrics]
+    data = [df[df["metric"] == m][value_col].values for m in metrics]
 
     bp = ax.boxplot(
         data,
@@ -76,6 +77,7 @@ def make_grouped_boxplot_on_ax(
     colors: list[str],
     title: str,
     ylim: list[float] | None = None,
+    value_col: str = "kendall_tau",
 ):
     assert len(dfs) == len(colors) == len(group_labels)
 
@@ -88,7 +90,7 @@ def make_grouped_boxplot_on_ax(
 
     # draw one boxplot call per df (gives you independent coloring & control)
     for j, (dfj, color, glab) in enumerate(zip(dfs, colors, group_labels)):
-        data_j = [dfj[dfj["metric"] == m]["kendall_tau"].values for m in metrics]
+        data_j = [dfj[dfj["metric"] == m][value_col].values for m in metrics]
         pos_j = x + offsets[j]
 
         bp = ax.boxplot(
@@ -120,15 +122,18 @@ def make_grouped_boxplot_on_ax(
     ax.axhline(y=0, linestyle="--", color="black", linewidth=0.8, alpha=0.6)
 
 
-def load_corr_by_repeat(results_root: Path):
+def load_corr_by_repeat(
+    results_root: Path,
+    filename: str = "kendall_by_repeat.csv",
+) -> pd.DataFrame:
     """
-    Loads kendall_by_repeat.csv for one or more datasets and concatenates them.
+    Loads a per-repeat correlation CSV for one or more datasets and concatenates them.
     Adds a 'dataset' column.
     """
     datasets = [p.name for p in results_root.iterdir() if p.is_dir()]
     dfs = []
     for d in datasets:
-        fp = results_root / d / "kendall_by_repeat.csv"
+        fp = results_root / d / filename
         if not fp.exists():
             raise FileNotFoundError(f"Missing: {fp}")
         df = pd.read_csv(fp)
@@ -137,13 +142,19 @@ def load_corr_by_repeat(results_root: Path):
     return pd.concat(dfs, ignore_index=True)
 
 
-def prep_panel_df(df: pd.DataFrame, fam_prefix: str) -> pd.DataFrame:
+def prep_panel_df(
+    df: pd.DataFrame,
+    fam_prefix: str,
+    value_col: str = "kendall_tau",
+) -> pd.DataFrame:
     """
     1) Select utilities belonging to a given family (by prefix).
-    2) Average Kendall's tau over utilities within the family,
-    for each (dataset, repeat, metric) combination.
+    2) Average the chosen alignment measure over utilities within the family,
+       for each (dataset, repeat, metric) combination.
     """
     df_plot = df[df["utility"].str.startswith(fam_prefix)].copy()
-    df_plot = df_plot.groupby(["dataset", "repeat", "metric"], as_index=False)["kendall_tau"].mean()
-
+    df_plot = df_plot.groupby(
+        ["dataset", "repeat", "metric"], as_index=False
+    )[value_col].mean()
+    df_plot = df_plot.dropna(subset=[value_col])
     return df_plot

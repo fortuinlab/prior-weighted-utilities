@@ -18,6 +18,33 @@ from src.utils import (   # noqa: E402
     prep_panel_df,
 )
 
+MEASURE_CONFIG = {
+    "kendall": {
+        "file": "kendall_by_repeat.csv",
+        "col": "kendall_tau",
+        "ylabel": r"alignment (Kendall's $\tau$)",
+        "ylim_default": [-1.05, 1.05],
+    },
+    "top1": {
+        "file": "kendall_by_repeat.csv",   # top1 lives in the same file
+        "col": "top1",
+        "ylabel": "top-1 agreement",
+        "ylim_default": [-0.05, 1.05],
+    },
+    "top3": {
+        "file": "kendall_by_repeat.csv",   # same file
+        "col": "top3",
+        "ylabel": "top-3 agreement (Jaccard)",
+        "ylim_default": [-0.05, 1.05],
+    },
+    "pearson": {
+        "file": "pearson_by_repeat.csv",
+        "col": "pearson_r",
+        "ylabel": r"alignment (Pearson's $r$)",
+        "ylim_default": [-1.05, 1.05],
+    },
+}
+
 results_root_bc = root_dir / "experiments/benchmark_datasets/binary_classification/results"
 results_root_reg = root_dir / "experiments/benchmark_datasets/regression/results"
 results_root_electricity = root_dir / "experiments/case_studies/electricity_market/results"
@@ -55,9 +82,11 @@ METRICS_REG_LABELS = [
 ]
 
 
-def plot_alignment(
-    experiment: str,
-):
+def plot_alignment(experiment: str, measure: str = "kendall"):
+    cfg = MEASURE_CONFIG[measure]
+    val_col = cfg["col"]
+    ylabel = cfg["ylabel"]
+    ylim = cfg["ylim_default"]
     fig_dir = root_dir / "figures"
     fig_dir.mkdir(parents=True, exist_ok=True)
     set_paper_style_icmlish()
@@ -97,8 +126,8 @@ def plot_alignment(
             Patch(facecolor=PLAUSIBLE, label="plausible prior (ours)"),
         ]
         # ---------- load data ----------
-        df_bc = load_corr_by_repeat(results_root_bc)
-        df_reg = load_corr_by_repeat(results_root_reg)
+        df_bc = load_corr_by_repeat(results_root_bc, cfg["file"])
+        df_reg = load_corr_by_repeat(results_root_reg, cfg["file"])
 
         # ---------- figure layout ----------
         # 2 rows x 2 cols = 4 plots
@@ -121,7 +150,7 @@ def plot_alignment(
         # Top: u_c avg over c; Bottom: u_k avg over k
         for row, fam in enumerate(("u_c", "u_k")):
             ax = axes[row, 0]
-            df_plot = prep_panel_df(df_bc, fam)
+            df_plot = prep_panel_df(df_bc, fam, val_col)
 
             make_boxplot_on_ax(
                 ax=ax,
@@ -130,14 +159,15 @@ def plot_alignment(
                 metric_labels=METRICS_BC_LABELS,
                 colors=COLOR_MAP_BC[fam],
                 title=bc_titles.get(fam, fam),
-                ylim=[-1.05, 1.05],
+                ylim=ylim,
+                value_col=val_col,
             )
             if row == 0:
                 ax.tick_params(labelbottom=False)
         # ---------- REG panels (right column) ----------
         for row, fam in enumerate(("u_lambda", "u_k_gamma")):
             ax = axes[row, 1]
-            df_plot = prep_panel_df(df_reg, fam)
+            df_plot = prep_panel_df(df_reg, fam, val_col)
 
             make_boxplot_on_ax(
                 ax=ax,
@@ -146,7 +176,8 @@ def plot_alignment(
                 metric_labels=METRICS_REG_LABELS,
                 colors=COLOR_MAP_REG[fam],
                 title=reg_titles.get(fam, fam),
-                ylim=[-1.05, 1.05],
+                ylim=ylim,
+                value_col=val_col,
             )
             if row == 0:
                 ax.tick_params(labelbottom=False)
@@ -162,7 +193,7 @@ def plot_alignment(
         fig.text(
             -0.01,            # x-position (figure coordinates)
             0.5,             # centered vertically
-            "alignment (Kendall's τ)",
+            ylabel,
             va="center",
             rotation="vertical",
         )
@@ -181,8 +212,9 @@ def plot_alignment(
             Patch(facecolor=NOTALIGNED, label="conventional metrics"),
             Patch(facecolor=PLAUSIBLE, label="PWUs (ours)"),
         ]
-        df = pd.read_csv(results_root_electricity / "kendall_by_repeat.csv")
-        df = df.groupby(["repeat", "metric"], as_index=False)["kendall_tau"].mean()
+        df = pd.read_csv(results_root_electricity / cfg["file"])
+        df = df.groupby(["repeat", "metric"], as_index=False)[val_col].mean()
+        df = df.dropna(subset=[val_col])
         fig, ax = plt.subplots(
             1, 1, figsize=figsize,
         )
@@ -193,9 +225,10 @@ def plot_alignment(
             metric_labels=METRICS_REG_LABELS,
             colors=COLOR_MAP_REG["Bid-Util"],
             title="Electricity Market Bidding",
-            ylim=[-1.05, 1.05],
+            ylim=ylim,
+            value_col=val_col,
         )
-        ax.set_ylabel("alignment (Kendall's τ)")
+        ax.set_ylabel(ylabel)
         fig.legend(
             handles=legend_handles,
             loc="lower center",
@@ -224,12 +257,14 @@ def plot_alignment(
             Patch(facecolor=NOTALIGNED, label="conventional metrics"),
             Patch(facecolor=PLAUSIBLE, label="PWUs (ours)"),
         ]
-        df_credit = load_corr_by_repeat(results_root_credit)
-        df_credit = df_credit.groupby(["dataset", "repeat", "metric"], as_index=False)["kendall_tau"].mean()
-        file_p2p = results_root_p2p / "kendall_by_repeat.csv"
-        df_p2p = pd.read_csv(file_p2p)
+        df_credit = load_corr_by_repeat(results_root_credit, cfg["file"])
+        df_credit = df_credit.groupby(["dataset", "repeat", "metric"], as_index=False)[val_col].mean()
+        df_credit = df_credit.dropna(subset=[val_col])
+
+        df_p2p = pd.read_csv(results_root_p2p / cfg["file"])
         df_p2p_plot = df_p2p[df_p2p["utility"] == "P2P-Util"].copy()
-        df_p2p_plot = df_p2p_plot.groupby(["repeat", "metric"], as_index=False)["kendall_tau"].mean()
+        df_p2p_plot = df_p2p_plot.groupby(["repeat", "metric"], as_index=False)[val_col].mean()
+        df_p2p_plot = df_p2p_plot.dropna(subset=[val_col])
         fig, ax = plt.subplots(
             1, 2, figsize=figsize,
         )
@@ -240,9 +275,10 @@ def plot_alignment(
             metric_labels=METRICS_BC_LABELS,
             colors=COLOR_MAP_BC["Credit-Util"],
             title="Credit Approval",
-            ylim=[-0.3, 1.05],
+            ylim=ylim,
+            value_col=val_col,
         )
-        ax[0].set_ylabel("alignment (Kendall's τ)")
+        ax[0].set_ylabel(ylabel)
         make_boxplot_on_ax(
             ax=ax[1],
             df=df_p2p_plot,
@@ -250,7 +286,8 @@ def plot_alignment(
             metric_labels=METRICS_BC_LABELS,
             colors=COLOR_MAP_BC["P2P-Util"],
             title="P2P Lending",
-            ylim=[-0.3, 1.05],
+            ylim=ylim,
+            value_col=val_col,
         )
         fig.legend(
             handles=legend_handles,
@@ -261,14 +298,14 @@ def plot_alignment(
         )
 
     fig.tight_layout(w_pad=1.2, h_pad=0.8)
-    fig.savefig(fig_dir / f"{experiment}.pdf", bbox_inches="tight")
+    fig.savefig(fig_dir / f"{experiment}_{measure}.pdf", bbox_inches="tight")
     plt.close(fig)
 
     return fig
 
 
-def main(experiment: str):
-    plot_alignment(experiment)
+def main(experiment: str, measure: str = "kendall"):
+    plot_alignment(experiment, measure)
 
 
 if __name__ == "__main__":
@@ -276,6 +313,11 @@ if __name__ == "__main__":
     parser.add_argument(
         "--experiment", type=str, default="benchmark",
         help="Which experiment to plot. Can be 'benchmark', 'electricity', and 'credit_and_p2p'."
+    )
+    parser.add_argument(
+        "--measure", type=str, default="pearson",
+        choices=list(MEASURE_CONFIG.keys()),
+        help="Which alignment measure to plot. Can be 'kendall', 'top1', 'top3', and 'pearson'.",
     )
 
     args = parser.parse_args()
