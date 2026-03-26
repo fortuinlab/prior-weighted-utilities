@@ -18,6 +18,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from torch.utils.data import DataLoader, TensorDataset
 from tqdm import tqdm
+from tabpfn import TabPFNClassifier
 
 root_dir = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(root_dir))
@@ -183,10 +184,53 @@ def mlp(X_tr, y_tr, X_te, preprocessor, seed):
     return proba_test_mlp
 
 
+def tab_pfn(X_tr, y_tr, X_te, device: torch.device, seed: int):
+    def normalize_df(df: pd.DataFrame) -> pd.DataFrame:
+        out = {}
+        for c in df.columns:
+            col = df[c].tolist()
+
+            # detect numeric vs categorical by first non-missing value
+            first = next((v for v in col if v is not None and v is not pd.NA), None)
+
+            if isinstance(first, (int, float, np.number)):
+                # numeric column → force float
+                out[c] = [
+                    float(v) if v is not None and v is not pd.NA else np.nan
+                    for v in col
+                ]
+            else:
+                # categorical column → force pure strings
+                out[c] = [
+                    "__nan__" if v is None or v is pd.NA else str(v)
+                    for v in col
+                ]
+
+        return pd.DataFrame(out)
+
+    X_tr = normalize_df(X_tr)
+    X_te = normalize_df(X_te)
+
+    # y must be pure ints
+    y_tr = np.asarray([int(v) for v in y_tr.tolist()], dtype=np.int64)
+
+    # enforce TabPFN regime
+    if len(X_tr) > 10_000:
+        rs = np.random.RandomState(seed)
+        idx = rs.choice(len(X_tr), 10_000, replace=False)
+        X_tr = X_tr.iloc[idx]
+        y_tr = y_tr[idx]
+
+    clf = TabPFNClassifier(device=device)
+    clf.fit(X_tr, y_tr)
+    return clf.predict_proba(X_te)[:, 1]
+
+
 def main(
     dataset: Optional[str] = None,
     repeat: Optional[int] = None,
     fold: Optional[int] = None,
+    only_tabpfn: bool = False,
 ):
     # Deterministic default model-seed per run
     seed = 10 * repeat + fold
@@ -282,6 +326,22 @@ def main(
         remainder="drop",
     )
 
+    if only_tabpfn:
+        existing_fp = out_path / "predictions.csv"
+        if not existing_fp.exists():
+            raise FileNotFoundError(f"Cannot append TabPFN — no existing {existing_fp}")
+        df_pred = pd.read_csv(existing_fp)
+        if "TabPFN" in df_pred.columns:
+            print(f"TabPFN already present in {existing_fp}, skipping.")
+            return
+
+        print(f"[{dataset}] repeat={repeat} fold={fold} — fitting TabPFN only...")
+        y_pred_tabpfn = tab_pfn(X_tr_df, y_tr_df, X_te_df, device, seed)
+        df_pred["TabPFN"] = np.squeeze(y_pred_tabpfn)
+        df_pred.to_csv(existing_fp, index=False)
+        print("Done — TabPFN column appended.")
+        return
+
     # ------ train + predict ------
     print(f"[{dataset}] repeat={repeat} fold={fold} seed={seed}")
 
@@ -309,6 +369,9 @@ def main(
     print("Fitting MLP...")
     y_pred_mlp = mlp(X_tr_df, y_tr_df, X_te_df, preprocess_gp_mlp, seed)
 
+    print("Fitting TabPFN...")
+    y_pred_tabpfn = tab_pfn(X_tr_df, y_tr_df, X_te_df, device, seed)
+
     # Save predictions + y_true + indices
     df_pred = pd.DataFrame(
         {
@@ -322,6 +385,7 @@ def main(
             "GB": np.squeeze(y_pred_gb),
             "GP": np.squeeze(y_pred_gp),
             "MLP": np.squeeze(y_pred_mlp),
+            "TabPFN": np.squeeze(y_pred_tabpfn),
         }
     )
 
@@ -330,9 +394,10 @@ def main(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--dataset", type=str, default="air")
+    parser.add_argument("--dataset", type=str, default="heartdisease")
     parser.add_argument("--repeat", type=int, default=0)
     parser.add_argument("--fold", type=int, default=1)
+    parser.add_argument("--only-tabpfn", type=bool, default=True)
 
     args = parser.parse_args()
     main(**vars(args))
