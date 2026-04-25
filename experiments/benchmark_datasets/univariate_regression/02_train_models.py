@@ -773,7 +773,7 @@ def main(
     print(f"Using device: {device}")
 
     data_path = Path(
-        str(root_dir) + f"/data/02_benchmark_datasets/regression/{dataset}"
+        str(root_dir) + f"/data/benchmark_datasets/univariate_regression/{dataset}"
     )
     # Load dataset once
     X = pd.read_parquet(data_path / "X.parquet")
@@ -807,7 +807,7 @@ def main(
     # Output path: one directory per repeat/fold
     out_path = Path(
         str(root_dir)
-        + f"/experiments/02_benchmark_datasets/regression/predictions/{dataset}/repeat_{repeat:04d}/fold_{fold:02d}"
+        + f"/experiments/benchmark_datasets/univariate_regression/predictions/{dataset}/repeat_{repeat:04d}/fold_{fold:02d}"
     )
     out_path.mkdir(parents=True, exist_ok=True)
 

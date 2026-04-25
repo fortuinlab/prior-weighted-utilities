@@ -566,7 +566,7 @@ def main(
     print(f"Using device: {device}")
 
     data_path = Path(
-        str(root_dir) + f"/data/02_benchmark_datasets/binary_classification/{dataset}"
+        str(root_dir) + f"/data/benchmark_datasets/binary_classification/{dataset}"
     )
 
     # Load dataset once
@@ -589,7 +589,7 @@ def main(
     # Output path: one directory per repeat/fold
     out_path = Path(
         str(root_dir)
-        + f"/experiments/02_benchmark_datasets/binary_classification/predictions/{dataset}/repeat_{repeat:04d}/fold_{fold:02d}"
+        + f"/experiments/benchmark_datasets/binary_classification/predictions/{dataset}/repeat_{repeat:04d}/fold_{fold:02d}"
     )
     out_path.mkdir(parents=True, exist_ok=True)
 

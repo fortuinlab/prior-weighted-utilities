@@ -28,7 +28,7 @@ def main():
     K = 5  # folds
 
     for dataset in datasets:
-        PATH = Path(str(root_dir) + f"/data/benchmark_datasets/regression/{dataset}")
+        PATH = Path(str(root_dir) + f"/data/benchmark_datasets/univariate_regression/{dataset}")
         PATH.mkdir(parents=True, exist_ok=True)
         # fetch dataset
         raw_data = fetch_ucirepo(id=dataset_ids[dataset])

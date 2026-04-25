@@ -135,7 +135,7 @@ def _compute_metrics_for_one_model(
 def main(dataset: Optional[str] = "air"):
     PRED_PATH = Path(
         str(root_dir)
-        + f"/experiments/benchmark_datasets/regression/predictions/{dataset}"
+        + f"/experiments/benchmark_datasets/univariate_regression/predictions/{dataset}"
     )
 
     n_lambda_samples = 5
@@ -202,17 +202,17 @@ def main(dataset: Optional[str] = "air"):
 
     RESULT_PATH_SLIGHT = Path(
         str(root_dir)
-        + f"/experiments/benchmark_datasets/regression/results_slight/{dataset}"
+        + f"/experiments/benchmark_datasets/univariate_regression/results_slight/{dataset}"
     )
     RESULT_PATH_SLIGHT.mkdir(parents=True, exist_ok=True)
     RESULT_PATH_STRONG = Path(
         str(root_dir)
-        + f"/experiments/benchmark_datasets/regression/results_strong/{dataset}"
+        + f"/experiments/benchmark_datasets/univariate_regression/results_strong/{dataset}"
     )
     RESULT_PATH_STRONG.mkdir(parents=True, exist_ok=True)
     RESULT_PATH_EXTREME = Path(
         str(root_dir)
-        + f"/experiments/benchmark_datasets/regression/results_extreme/{dataset}"
+        + f"/experiments/benchmark_datasets/univariate_regression/results_extreme/{dataset}"
     )
     RESULT_PATH_EXTREME.mkdir(parents=True, exist_ok=True)
 

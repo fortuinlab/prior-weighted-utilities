@@ -106,7 +106,7 @@ def _compute_metrics_for_one_model(
 def main(dataset: Optional[str] = "air"):
     PRED_PATH = Path(
         str(root_dir)
-        + f"/experiments/benchmark_datasets/regression/predictions/{dataset}"
+        + f"/experiments/benchmark_datasets/univariate_regression/predictions/{dataset}"
     )
 
     # configure utilities
@@ -136,7 +136,7 @@ def main(dataset: Optional[str] = "air"):
 
     RESULT_PATH = Path(
         str(root_dir)
-        + f"/experiments/benchmark_datasets/regression/results/{dataset}"
+        + f"/experiments/benchmark_datasets/univariate_regression/results/{dataset}"
     )
     RESULT_PATH.mkdir(parents=True, exist_ok=True)
 
