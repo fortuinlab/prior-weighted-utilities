@@ -4,8 +4,8 @@ import pandas as pd
 from pathlib import Path
 
 
-def set_paper_style_icmlish():
-    """ICML-ish Matplotlib style used across all paper figures."""
+def set_paper_style_NeurIPSish():
+    """NeurIPS-ish Matplotlib style used across all paper figures."""
     plt.rcParams.update({
         # --- font: Times-like serif ---
         "font.family": "serif",
@@ -32,7 +32,7 @@ def make_boxplot_on_ax(
     df: pd.DataFrame,
     metrics: list[str],
     metric_labels: list[str],
-    colors: list[str],
+    colors: list[tuple[float, float, float]],
     title: str,
     ylim: list[float] = None,
     value_col: str = "kendall_tau",

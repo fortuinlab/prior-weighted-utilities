@@ -12,7 +12,7 @@ root_dir = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(root_dir))
 
 from src.utils import (   # noqa: E402
-    set_paper_style_icmlish,
+    set_paper_style_NeurIPSish,
     make_boxplot_on_ax,
     load_corr_by_repeat,
     prep_panel_df,
@@ -46,10 +46,12 @@ MEASURE_CONFIG = {
 }
 
 results_root_bc = root_dir / "experiments/benchmark_datasets/binary_classification/results"
-results_root_reg = root_dir / "experiments/benchmark_datasets/regression/results"
+results_root_reg = root_dir / "experiments/benchmark_datasets/univariate_regression/results"
 results_root_electricity = root_dir / "experiments/case_studies/electricity_market/results"
 results_root_credit = root_dir / "experiments/case_studies/credit_approval/results"
 results_root_p2p = root_dir / "experiments/case_studies/p2p_lending/results"
+results_root_mc = root_dir / "experiments/benchmark_datasets/multiclass_classification/results"
+results_root_mr = root_dir / "experiments/benchmark_datasets/multivariate_regression/results"
 
 # ---------- colors and metrics ----------
 cols = sns.color_palette()
@@ -80,6 +82,21 @@ METRICS_REG_LABELS = [
     r"$M_{\pi_\lambda}$",
     r"$M_{\pi_\phi}$"
 ]
+METRICS_MC = [
+    "NLL", "Brier", "ECE",
+    "MCD-PWU"
+]
+METRICS_MC_LABELS = [
+    "NLL", "BS", "ECE",
+    r"$M_{\pi_{j,c}}$"]
+METRICS_MR = [
+    "NLL", "MSE", "ES",
+    "SP-PWU"
+]
+METRICS_MR_LABELS = [
+    "NLL", "MSE", "ES",
+    r"$M_{\pi_\lambda}$",
+]
 
 
 def plot_alignment(experiment: str, measure: str = "kendall"):
@@ -87,11 +104,12 @@ def plot_alignment(experiment: str, measure: str = "kendall"):
     val_col = cfg["col"]
     ylabel = cfg["ylabel"]
     ylim = cfg["ylim_default"]
+
     fig_dir = root_dir / "figures"
     fig_dir.mkdir(parents=True, exist_ok=True)
-    set_paper_style_icmlish()
+    set_paper_style_NeurIPSish()
     if experiment == "benchmark":
-        figsize = (6.8, 3.8)
+        figsize = (5.5, 3.1)
         COLOR_MAP_BC = {
             "u_c": [
                 PATHOLOGICAL, PATHOLOGICAL, PATHOLOGICAL,
@@ -199,7 +217,7 @@ def plot_alignment(experiment: str, measure: str = "kendall"):
         )
 
     if experiment == "electricity":
-        figsize = (4.0, 2.3)
+        figsize = (3.25, 1.9)
         COLOR_MAP_REG = {
             "Bid-Util": [
                 NOTALIGNED, NOTALIGNED,
@@ -238,7 +256,7 @@ def plot_alignment(experiment: str, measure: str = "kendall"):
         )
 
     if experiment == "credit_and_p2p":
-        figsize = (6.8, 2.3)
+        figsize = (5.5, 1.9)
         COLOR_MAP_BC = {
             "Credit-Util": [
                 NOTALIGNED, NOTALIGNED, NOTALIGNED,
@@ -297,6 +315,90 @@ def plot_alignment(experiment: str, measure: str = "kendall"):
             bbox_to_anchor=(0.5, -0.05),
         )
 
+    if experiment == "benchmark_multi":
+        figsize = (5.5, 1.9)
+        COLOR_MAP_MC = {
+            "u_jc": [
+                PATHOLOGICAL, PATHOLOGICAL, NOTALIGNED,
+                PLAUSIBLE,
+            ],
+        }
+        COLOR_MAP_MR = {
+            "u_lambda": [
+                NOTALIGNED, NOTALIGNED, NOTALIGNED,
+                PLAUSIBLE,
+            ],
+        }
+        legend_handles = [
+            Patch(facecolor=NOTALIGNED, label="not decision-aligned"),
+            Patch(facecolor=PATHOLOGICAL, label="pathological prior"),
+            Patch(facecolor=PLAUSIBLE, label="plausible prior (ours)"),
+        ]
+        # ---------- load data ----------
+        df_mc = load_corr_by_repeat(results_root_mc, cfg["file"])
+        df_mr = load_corr_by_repeat(results_root_mr, cfg["file"])
+
+        # ---------- figure layout ----------
+        # 1 row x 2 cols = 2 plots
+        # share x-axis per column
+        fig, axes = plt.subplots(
+            1, 2, figsize=figsize,
+            sharex="col",
+            sharey=False,
+            gridspec_kw={'width_ratios': [1, 0.9]},
+        )
+        mc_titles = {
+            "u_jc": "Binary Decision",
+        }
+        mr_titles = {
+            "u_lambda": "Selective Prediction",
+        }
+        # ---------- BC panel (left column) ----------
+        # u_jc avg over c
+        ax = axes[0]
+        df_plot = prep_panel_df(df_mc, "u_jc", val_col)
+
+        make_boxplot_on_ax(
+            ax=ax,
+            df=df_plot,
+            metrics=METRICS_MC,
+            metric_labels=METRICS_MC_LABELS,
+            colors=COLOR_MAP_MC["u_jc"],
+            title=mc_titles.get("u_jc", "u_jc"),
+            ylim=ylim,
+            value_col=val_col,
+        )
+        # ---------- REG panel (right column) ----------
+        ax = axes[1]
+        df_plot = prep_panel_df(df_mr, "u_lambda", val_col)
+
+        make_boxplot_on_ax(
+            ax=ax,
+            df=df_plot,
+            metrics=METRICS_MR,
+            metric_labels=METRICS_MR_LABELS,
+            colors=COLOR_MAP_MR["u_lambda"],
+            title=mr_titles.get("u_lambda", "u_lambda"),
+            ylim=ylim,
+            value_col=val_col,
+        )
+        # ---------- legend (shared) ----------
+        fig.legend(
+            handles=legend_handles,
+            loc="lower center",
+            ncol=3,
+            frameon=False,
+            bbox_to_anchor=(0.5, -0.05),
+        )
+        # Shared y-axis label for left column (BC)
+        fig.text(
+            -0.01,            # x-position (figure coordinates)
+            0.5,             # centered vertically
+            ylabel,
+            va="center",
+            rotation="vertical",
+        )
+
     fig.tight_layout(w_pad=1.2, h_pad=0.8)
     fig.savefig(fig_dir / f"{experiment}_{measure}.pdf", bbox_inches="tight")
     plt.close(fig)
@@ -312,10 +414,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--experiment", type=str, default="benchmark",
-        help="Which experiment to plot. Can be 'benchmark', 'electricity', and 'credit_and_p2p'."
+        help="Which experiment to plot. Can be 'benchmark', 'electricity', 'credit_and_p2p', and 'benchmark_multi'."
     )
     parser.add_argument(
-        "--measure", type=str, default="pearson",
+        "--measure", type=str, default="kendall",
         choices=list(MEASURE_CONFIG.keys()),
         help="Which alignment measure to plot. Can be 'kendall', 'top1', 'top3', and 'pearson'.",
     )

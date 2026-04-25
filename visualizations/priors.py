@@ -10,7 +10,7 @@ root_dir = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(root_dir))
 
 from src.utils import (   # noqa: E402
-    set_paper_style_icmlish,
+    set_paper_style_NeurIPSish,
 )
 
 
@@ -38,13 +38,17 @@ def plot_beta_density(
 ):
     fig_dir = root_dir / "figures"
     fig_dir.mkdir(parents=True, exist_ok=True)
-    set_paper_style_icmlish()
-    set_paper_style_icmlish()
+    set_paper_style_NeurIPSish()
+    set_paper_style_NeurIPSish()
     x = np.linspace(1e-6, 1 - 1e-6, n)
 
     # One row, two columns
     fig, axes = plt.subplots(
-        1, 2, figsize=(6.8, 2), sharey=True
+        1, 2,
+        # figsize=(6.8, 2),
+        # figsize = (6.8, 3.8)
+        figsize=(5.5, 1.6),
+        sharey=True
     )
 
     # ======================================================

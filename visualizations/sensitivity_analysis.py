@@ -10,7 +10,7 @@ root_dir = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(root_dir))
 
 from src.utils import (   # noqa: E402
-    set_paper_style_icmlish,
+    set_paper_style_NeurIPSish,
     make_grouped_boxplot_on_ax,
     load_corr_by_repeat,
     prep_panel_df,
@@ -81,8 +81,8 @@ def plot_alignment(task: str):
     results_root_extreme = root_dir / f"experiments/benchmark_datasets/{task}/results_extreme"
     fig_dir = root_dir / "figures"
     fig_dir.mkdir(parents=True, exist_ok=True)
-    set_paper_style_icmlish()
-    figsize = (6.8, 3.8)
+    set_paper_style_NeurIPSish()
+    figsize = (5.5, 3.1)
 
     # ---------- load data ----------
     df_base = load_corr_by_repeat(result_root_base)
@@ -129,7 +129,7 @@ def plot_alignment(task: str):
     fig.text(
         -0.01,            # x-position (figure coordinates)
         0.5,             # centered vertically
-        "alignment (Kendall's τ)",
+        r"alignment (Kendall's $\tau$)",
         va="center",
         rotation="vertical",
     )

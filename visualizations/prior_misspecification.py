@@ -9,7 +9,7 @@ root_dir = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(root_dir))
 
 from src.utils import (   # noqa: E402
-    set_paper_style_icmlish,
+    set_paper_style_NeurIPSish,
 )
 
 cols = sns.color_palette("ch:s=-.2,r=.6", as_cmap=True)
@@ -38,11 +38,11 @@ def beta_mode(a, b):
 def plot_beta_density():
     fig_dir = root_dir / "figures"
     fig_dir.mkdir(parents=True, exist_ok=True)
-    set_paper_style_icmlish()
+    set_paper_style_NeurIPSish()
     x = np.linspace(1e-6, 1 - 1e-6, 2000)
 
     fig, ax = plt.subplots(
-        1, 3, figsize=(6.8, 2), sharey=True
+        1, 3, figsize=(5.5, 1.6), sharey=True
     )
 
     y_c_base = beta.pdf(x, 2, 10)

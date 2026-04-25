@@ -12,12 +12,12 @@ root_dir = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(root_dir))
 
 from src.utils import (   # noqa: E402
-    set_paper_style_icmlish,
+    set_paper_style_NeurIPSish,
 )
 
 fig_dir = root_dir / "figures"
 fig_dir.mkdir(parents=True, exist_ok=True)
-set_paper_style_icmlish()
+set_paper_style_NeurIPSish()
 
 df_windpower_profit_cumsum = pd.read_csv(
     root_dir / "experiments/case_studies/electricity_market/results/profit_cumsum.csv", index_col=0
@@ -34,7 +34,7 @@ cols = sns.color_palette()
 colors = [cols[0]] + [cols[8]] + [cols[1]] + [cols[4]] + [cols[2]]
 
 for model, color in zip(models, colors):
-    day_slice = df_windpower_profit_cumsum["2024-12-12 00:00:00":"2024-12-12 15:00:00"]
+    day_slice = df_windpower_profit_cumsum["2024-12-03 20:00:00":"2024-12-04 12:00:00"]
     x = day_slice.index
     y = day_slice[model].values
 
