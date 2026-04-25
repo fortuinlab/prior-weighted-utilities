@@ -1,11 +1,11 @@
 # UQ Evaluation With Prior-Weighted Utilities
 
-This is the code for the ICML submission "Decision-Alignment & Prior-Weighted Utilities: Towards Meaningful Evaluation of Uncertainty Quantification".
+This is the code for the NeurIPS submission "Decision-Alignment Evaluation of Uncertainty Quantification".
 In this README, we give instructions on how to run the experiments and refer to the paper for a detailed explanation of the setup.
 
 ## 🚀 Getting Started
 
-Install `uv` and simply run
+Install `uv` (if required) and simply run
 ```
 uv sync
 ```
@@ -15,8 +15,9 @@ uv sync
 ### 📊 Benchmark Experiments
 
 The code for the experiments on benchmark datasets can be found in `experiments/benchmark_datasets`.
-There are two separate folders for the binary classification and regression experiments.
-We now explain how to run the experiments for binary classification; regression follows analogously.
+There are four separate folders for the classification (binary and multiclass) and regression (univariate and multivariate) experiments.
+We now explain how to run the experiments for binary classification; the others follow analogously.
+
 All required files can be found in the folder `experiments/benchmark_datasets/binary_classification`.
 
 To fetch and preprocess the datasets, run `01_preprocess_datasets.py`.
@@ -33,7 +34,7 @@ For the evaluation for one dataset, run `03_evaluate_models.py` with the respect
 This can be orchestrated with `03_evaluate_models.sh`.
 The results will be stored in the new folder `results`.
 
-Running the sensitivity analysis for prior misspecification works just as regular evaluation, but using the Python script `04_sensitivity_analysis.py` (and the corresponding `.sh` file for orchestration).
+Running the sensitivity analysis for prior misspecification (available for binary classification and univariate regression) works just as regular evaluation, but using the Python script `04_sensitivity_analysis.py` (and the corresponding `.sh` file for orchestration).
 
 ### 🌳 Applied Case Studies
 
