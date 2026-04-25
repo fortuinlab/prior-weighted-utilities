@@ -90,7 +90,7 @@ def main():
     )
     df = df.dropna(how="all")
 
-    df_sub = df[df["grade"] >= 5].copy()
+    df_sub = df[df["grade"] >= 6].copy()
 
     X_df = df_sub.drop(columns=["y"]).copy()
     y_df = df_sub["y"].copy()
