@@ -1,7 +1,7 @@
 import argparse
 import sys
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, Optional
 
 import numpy as np
 import pandas as pd
@@ -115,10 +115,6 @@ def multiclass_decision_pwu(
 # Per-model metric computation
 # ---------------------------------------------------------------------------
 def _compute_metrics_for_one_model(
-    dataset: str,
-    model: str,
-    repeat: int,
-    fold: int,
     y_true: np.ndarray,
     probs: np.ndarray,
     alpha_param_c: float,
@@ -127,13 +123,7 @@ def _compute_metrics_for_one_model(
     c_vec: np.ndarray,
     c_vec_name: np.ndarray,
 ) -> Dict[str, float]:
-    PWU_PATH = Path(
-        str(root_dir)
-        + f"/experiments/benchmark_datasets/multiclass_classification/results/{dataset}/pwus/{model}"
-    )
-    PWU_PATH.mkdir(parents=True, exist_ok=True)
-
-    n, K = probs.shape
+    _, K = probs.shape
     y_pred = probs.argmax(axis=1)
 
     # Clip and renormalize for log_loss stability
@@ -146,12 +136,7 @@ def _compute_metrics_for_one_model(
     acc = accuracy_score(y_true, y_pred)
     ece = ece_multiclass(y_true, probs, n_bins=10)
 
-    pwu_fp = PWU_PATH / f"repeat_{repeat}_fold_{fold}_mcd_pwu.npy"
-    if pwu_fp.exists():
-        mcd_p = float(np.load(pwu_fp))
-    else:
-        mcd_p = multiclass_decision_pwu(probs, y_true, alpha_param_c, beta_param_c)
-        np.save(pwu_fp, mcd_p)
+    mcd_p = multiclass_decision_pwu(probs, y_true, alpha_param_c, beta_param_c)
 
     out = {
         "NLL ↓": float(nll),
@@ -226,10 +211,6 @@ def main(dataset: Optional[str] = "iris"):
                         f"y_true {y_true.shape}"
                     )
                 metrics = _compute_metrics_for_one_model(
-                    dataset=dataset,
-                    model=model,
-                    repeat=repeat,
-                    fold=fold,
                     y_true=y_true,
                     probs=probs,
                     alpha_param_c=alpha_param_c,

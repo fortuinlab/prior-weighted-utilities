@@ -202,10 +202,6 @@ def selective_prediction_pwu_multivariate(
 # Per-model metric computation
 # ---------------------------------------------------------------------------
 def _compute_metrics_for_one_model(
-    dataset: str,
-    model: str,
-    repeat: int,
-    fold: int,
     y_true: np.ndarray,
     mu: np.ndarray,
     Sigma: np.ndarray,
@@ -214,24 +210,14 @@ def _compute_metrics_for_one_model(
     lambda_factor_vec: np.ndarray,
     lambda_factor_vec_name: np.ndarray,
 ) -> Dict[str, float]:
-    PWU_PATH = Path(
-        str(root_dir)
-        + f"/experiments/benchmark_datasets/multivariate_regression/results/{dataset}/pwus/{model}"
-    )
-    PWU_PATH.mkdir(parents=True, exist_ok=True)
 
     nll = multivariate_gaussian_nll(y_true, mu, Sigma)
     mse = mean_squared_error_multivariate(y_true, mu)
     es = energy_score(y_true, mu, Sigma, n_samples=100, seed=0)
 
-    pwu_fp = PWU_PATH / f"repeat_{repeat}_fold_{fold}_sp_pwu.npy"
-    if pwu_fp.exists():
-        sp_p = float(np.load(pwu_fp))
-    else:
-        sp_p = selective_prediction_pwu_multivariate(
-            mu, Sigma, y_true, alpha_param_lambda, beta_param_lambda
-        )
-        np.save(pwu_fp, sp_p)
+    sp_p = selective_prediction_pwu_multivariate(
+        mu, Sigma, y_true, alpha_param_lambda, beta_param_lambda
+    )
 
     out = {
         "NLL ↓": float(nll),
@@ -322,10 +308,6 @@ def main(dataset: Optional[str] = "energy"):
                     )
 
                 metrics = _compute_metrics_for_one_model(
-                    dataset=dataset,
-                    model=model,
-                    repeat=repeat,
-                    fold=fold,
                     y_true=y_true,
                     mu=mu,
                     Sigma=Sigma,

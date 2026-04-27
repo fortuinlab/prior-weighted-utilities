@@ -33,8 +33,6 @@ def plot_beta_density(
     alpha_gamma, beta_gamma,
 
     n=2000,
-    filename=None,
-    show=True,
 ):
     fig_dir = root_dir / "figures"
     fig_dir.mkdir(parents=True, exist_ok=True)
@@ -162,6 +160,5 @@ plot_beta_density(
     alpha_k_r=1.2, beta_k_r=20.8,
     alpha_gamma=2, beta_gamma=6,
 
-    filename=root_dir / "experiments/02_benchmark_datasets/figures/priors.pdf",
     n=2000,
 )

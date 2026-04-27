@@ -55,12 +55,12 @@ METRICS_REG_LABELS = [
     r"$M_{\pi_\phi}$"
 ]
 bc_titles = {
-    "u_c": "Binary Decision",
-    "u_k": r"Top-$k$ Selection",
+    "u_c": "Binary decision",
+    "u_k": r"Top-$k$ selection",
 }
 reg_titles = {
-    "u_lambda": "Selective Prediction",
-    "u_k_gamma": r"Top-$k$ Selection",
+    "u_lambda": "Selective prediction",
+    "u_k_gamma": r"Top-$k$ selection",
 }
 
 
@@ -70,7 +70,7 @@ def plot_alignment(task: str):
         METRICS_LABELS = METRICS_BC_LABELS
         titles = bc_titles
         utilities = ("u_c", "u_k")
-    elif task == "regression":
+    elif task == "univariate_regression":
         METRICS = METRICS_REG
         METRICS_LABELS = METRICS_REG_LABELS
         titles = reg_titles
@@ -150,7 +150,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--task", type=str, default="binary_classification",
-        help="Can be 'binary_classification' and 'regression'."
+        help="Can be 'binary_classification' and 'univariate_regression'."
     )
 
     args = parser.parse_args()

@@ -34,13 +34,13 @@ MEASURE_CONFIG = {
     "top3": {
         "file": "kendall_by_repeat.csv",   # same file
         "col": "top3",
-        "ylabel": "top-3 agreement (Jaccard)",
+        "ylabel": "top-3 agreement",
         "ylim_default": [-0.05, 1.05],
     },
     "pearson": {
         "file": "pearson_by_repeat.csv",
         "col": "pearson_r",
-        "ylabel": r"alignment (Pearson's $r$)",
+        "ylabel": r"alignment (Pearson's $\rho$)",
         "ylim_default": [-1.05, 1.05],
     },
 }
@@ -157,12 +157,12 @@ def plot_alignment(experiment: str, measure: str = "kendall"):
             gridspec_kw={'width_ratios': [1, 0.9]},
         )
         bc_titles = {
-            "u_c": "Binary Decision",
-            "u_k": r"Top-$k$ Selection",
+            "u_c": "Binary decision",
+            "u_k": r"Top-$k$ selection",
         }
         reg_titles = {
-            "u_lambda": "Selective Prediction",
-            "u_k_gamma": r"Top-$k$ Selection",
+            "u_lambda": "Selective prediction",
+            "u_k_gamma": r"Top-$k$ selection",
         }
         # ---------- BC panels (left column) ----------
         # Top: u_c avg over c; Bottom: u_k avg over k
@@ -242,7 +242,7 @@ def plot_alignment(experiment: str, measure: str = "kendall"):
             metrics=METRICS_REG,
             metric_labels=METRICS_REG_LABELS,
             colors=COLOR_MAP_REG["Bid-Util"],
-            title="Electricity Market Bidding",
+            title="Electricity market bidding",
             ylim=ylim,
             value_col=val_col,
         )
@@ -292,7 +292,7 @@ def plot_alignment(experiment: str, measure: str = "kendall"):
             metrics=METRICS_BC,
             metric_labels=METRICS_BC_LABELS,
             colors=COLOR_MAP_BC["Credit-Util"],
-            title="Credit Approval",
+            title="Credit approval",
             ylim=ylim,
             value_col=val_col,
         )
@@ -303,7 +303,7 @@ def plot_alignment(experiment: str, measure: str = "kendall"):
             metrics=METRICS_BC,
             metric_labels=METRICS_BC_LABELS,
             colors=COLOR_MAP_BC["P2P-Util"],
-            title="P2P Lending",
+            title="P2P lending",
             ylim=ylim,
             value_col=val_col,
         )
@@ -348,10 +348,10 @@ def plot_alignment(experiment: str, measure: str = "kendall"):
             gridspec_kw={'width_ratios': [1, 0.9]},
         )
         mc_titles = {
-            "u_jc": "Binary Decision",
+            "u_jc": "Binary decision",
         }
         mr_titles = {
-            "u_lambda": "Selective Prediction",
+            "u_lambda": "Selective prediction",
         }
         # ---------- BC panel (left column) ----------
         # u_jc avg over c
@@ -417,7 +417,7 @@ if __name__ == "__main__":
         help="Which experiment to plot. Can be 'benchmark', 'electricity', 'credit_and_p2p', and 'benchmark_multi'."
     )
     parser.add_argument(
-        "--measure", type=str, default="kendall",
+        "--measure", type=str, default="pearson",
         choices=list(MEASURE_CONFIG.keys()),
         help="Which alignment measure to plot. Can be 'kendall', 'top1', 'top3', and 'pearson'.",
     )
