@@ -91,6 +91,6 @@ The results will be stored in `results`.
 ## 🌠 Visualizing Results
 
 All scripts to create figures can be found in the folder `visualization`.
-`case_study_figures.py`, `priors.py`, and `prior_misspecification.py` can simply be executed and the resulting figure will be stored in a new folder `figures`.
+`case_study_figures.py`, `priors.py`, `pathological_priors.py`, and `prior_misspecification.py` can simply be executed and the resulting figure will be stored in a new folder `figures`.
 The result boxplots can be created with the script `boxplots.py`, specifying the experiment and alignment measure.
 The sensitivity analysis results can be visualized with the script `sensitivity_analysis`, specifying the task.
