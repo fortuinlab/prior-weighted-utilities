@@ -1,6 +1,6 @@
 # UQ Evaluation With Prior-Weighted Utilities
 
-This is the code for the NeurIPS submission "Decision-Alignment Evaluation of Uncertainty Quantification".
+This is the code for paper "Decision-Alignment Evaluation of Uncertainty Quantification".
 In this README, we give instructions on how to run the experiments and refer to the paper for a detailed explanation of the setup.
 
 ## 🚀 Getting Started

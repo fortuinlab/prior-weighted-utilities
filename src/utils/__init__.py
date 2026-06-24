@@ -4,6 +4,6 @@ from .visualization import (
     load_corr_by_repeat,
     make_boxplot_on_ax,
     make_grouped_boxplot_on_ax,
-    set_paper_style_NeurIPSish,
+    set_paper_style,
     prep_panel_df,
 )

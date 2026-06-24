@@ -1,7 +1,7 @@
 [project]
 name = "prior-weighted-utilities"
 version = "0.1.0"
-description = "Code for the NeurIPS submission \"Decision-Alignment & Prior-Weighted Utilities: Towards Meaningful Evaluation of Uncertainty Quantification\""
+description = "Code for the paper \"Decision-Alignment & Prior-Weighted Utilities: Towards Meaningful Evaluation of Uncertainty Quantification\""
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [

@@ -12,7 +12,7 @@ root_dir = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(root_dir))
 
 from src.utils import (   # noqa: E402
-    set_paper_style_NeurIPSish,
+    set_paper_style,
     make_boxplot_on_ax,
     load_corr_by_repeat,
     prep_panel_df,
@@ -107,7 +107,7 @@ def plot_alignment(experiment: str, measure: str = "kendall"):
 
     fig_dir = root_dir / "figures"
     fig_dir.mkdir(parents=True, exist_ok=True)
-    set_paper_style_NeurIPSish()
+    set_paper_style()
     if experiment == "benchmark":
         figsize = (5.5, 3.1)
         COLOR_MAP_BC = {

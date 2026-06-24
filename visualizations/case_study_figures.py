@@ -12,12 +12,12 @@ root_dir = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(root_dir))
 
 from src.utils import (   # noqa: E402
-    set_paper_style_NeurIPSish,
+    set_paper_style,
 )
 
 fig_dir = root_dir / "figures"
 fig_dir.mkdir(parents=True, exist_ok=True)
-set_paper_style_NeurIPSish()
+set_paper_style()
 
 df_windpower_profit_cumsum = pd.read_csv(
     root_dir / "experiments/case_studies/electricity_market/results/profit_cumsum.csv", index_col=0

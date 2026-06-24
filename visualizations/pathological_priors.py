@@ -8,7 +8,7 @@ root_dir = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(root_dir))
 
 from src.utils import (   # noqa: E402
-    set_paper_style_NeurIPSish,
+    set_paper_style,
 )
 
 
@@ -36,7 +36,7 @@ def plot_pathological_priors(
     """
     fig_dir = root_dir / "figures"
     fig_dir.mkdir(parents=True, exist_ok=True)
-    set_paper_style_NeurIPSish()
+    set_paper_style()
 
     cols = sns.color_palette()
     col_nll = cols[0]

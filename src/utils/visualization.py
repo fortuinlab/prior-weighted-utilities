@@ -4,8 +4,8 @@ import pandas as pd
 from pathlib import Path
 
 
-def set_paper_style_NeurIPSish():
-    """NeurIPS-ish Matplotlib style used across all paper figures."""
+def set_paper_style():
+    """Matplotlib style used across all paper figures."""
     plt.rcParams.update({
         # --- font: Times-like serif ---
         "font.family": "serif",
